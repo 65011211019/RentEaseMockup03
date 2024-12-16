@@ -1,112 +1,190 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 const Nav = () => {
+  const [loggedInUser, setLoggedInUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  // Retrieve logged-in user data from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("loggedInUser");
+    if (savedUser) {
+      setLoggedInUser(JSON.parse(savedUser));
+    }
+  }, []);
 
-  const handleSearch = () => {
-    alert(`Searching for: ${searchText}`); // Replace with your search functionality
+  const handleLogout = () => {
+    setLoggedInUser(null);
+    setIsMenuOpen(false); // Close mobile menu on logout
+    localStorage.removeItem("loggedInUser");
   };
 
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen); // Toggle mobile menu
+
   return (
-    <nav className="flex justify-between items-center px-6 py-4 text-white z-10 relative bg-black">
-      {/* Logo */}
-      <h1 className="text-xl font-semibold">RentEase</h1>
+    <nav className="bg-black text-white px-6 py-4 flex justify-between items-center relative">
+      {/* Mobile Menu Button (on left) */}
+      <button className="md:hidden text-white" onClick={toggleMenu}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          className="w-6 h-6"
+        >
+          {isMenuOpen ? (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          ) : (
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          )}
+        </svg>
+      </button>
+
+      {/* Logo (Left-aligned) */}
+      <div className="flex items-center">
+        <h1 className="text-xl font-semibold">RentEase</h1>
+      </div>
 
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center space-x-6">
         <ul className="flex space-x-6">
-          {["Home", "Product"].map((item) => (
-            <li
-              key={item}
-              className="text-gray-300 hover:text-white transition duration-300"
-            >
-              {item}
-            </li>
-          ))}
+          {/* Link to Home */}
+          <li className="text-gray-300 hover:text-white transition duration-300">
+            <Link to="/">Home</Link> {/* This will navigate to HomePage */}
+          </li>
+          <li className="text-gray-300 hover:text-white transition duration-300">
+            <Link to="/product">Product</Link>
+          </li>
         </ul>
 
-        {/* Search Bar */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="text"
-            placeholder="ค้นหาสินค้า..."
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-button-pink"
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-button-pink px-4 py-2 rounded-md text-white hover:bg-pink-500 transition duration-300"
-          >
-            ค้นหา
-          </button>
+        {/* Desktop Login Section */}
+        <div className="flex items-center space-x-4">
+          {!loggedInUser ? (
+            <Link to="/login" className="text-gray-300 hover:text-white transition duration-300">
+              Login
+            </Link>
+          ) : (
+            <DropdownMenu
+              loggedInUser={loggedInUser}
+              handleLogout={handleLogout}
+            />
+          )}
         </div>
       </div>
 
-      {/* Mobile Hamburger Button */}
+      {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-16 left-0 bg-black text-white w-full py-4 px-6 space-y-4 z-10">
+          <ul>
+            <li className="text-gray-300 hover:text-white transition duration-300">
+              <Link to="/" onClick={toggleMenu}>Home</Link> {/* This will navigate to HomePage */}
+            </li>
+            <li className="text-gray-300 hover:text-white transition duration-300">
+              <Link to="/product" onClick={toggleMenu}>Product</Link>
+            </li>
+            {!loggedInUser ? (
+              <li>
+                <Link
+                  to="/login"
+                  className="text-gray-300 hover:text-white transition duration-300"
+                  onClick={toggleMenu}
+                >
+                  Login
+                </Link>
+              </li>
+            ) : (
+              <>
+                <li>
+                  <Link
+                    to="/profile" // Add a link for profile management in mobile
+                    className="text-gray-300 hover:text-white transition duration-300"
+                    onClick={toggleMenu}
+                  >
+                    Manage Profile
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    className="text-gray-300 hover:text-white transition duration-300"
+                    onClick={handleLogout}
+                  >
+                    Logout
+                  </button>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+      )}
+    </nav>
+  );
+};
+
+// Dropdown menu for desktop
+const DropdownMenu = ({ loggedInUser, handleLogout }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
       <button
-        className="md:hidden text-gray-300 hover:text-white"
-        onClick={toggleMenu}
+        className="flex items-center space-x-2 text-gray-300 hover:text-white transition duration-300"
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
       >
-        <span className="material-icons">menu</span>
+        <span>{loggedInUser.user_name || "User"}</span>
+        <svg
+          className="w-4 h-4 transform rotate-0"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
 
-      {/* Mobile Navigation Menu */}
-      <div
-        className={`${
-          isMenuOpen ? "block" : "hidden"
-        } absolute top-16 left-0 w-full bg-black text-white md:hidden`}
-      >
-        <ul className="flex flex-col items-center space-y-4 py-4">
-          {["Home", "Product"].map((item) => (
+      {/* Dropdown Menu */}
+      {isDropdownOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-20">
+          <ul className="py-2 text-gray-300">
             <li
-              key={item}
-              className="text-gray-300 hover:text-white transition duration-300"
+              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+              onClick={() => alert("Profile management not implemented yet.")} // Placeholder for profile management
             >
-              {item}
+              Manage Profile
             </li>
-          ))}
-
-          {/* Search Bar in Mobile */}
-          <div className="flex flex-col items-center space-y-2 w-11/12">
-            <input
-              type="text"
-              placeholder="ค้นหาสินค้า..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="bg-gray-700 text-white rounded-md px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-button-pink"
-            />
-            <button
-              onClick={handleSearch}
-              className="bg-button-pink px-4 py-2 rounded-md text-white hover:bg-pink-500 transition duration-300 w-full"
+            <li
+              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+              onClick={handleLogout}
             >
-              ค้นหา
-            </button>
-          </div>
-
-          {/* Mobile Buttons (Cart and Login) */}
-          <li className="text-gray-300 hover:text-white transition duration-300">
-            <button>ตะกร้า</button>
-          </li>
-          <li className="text-gray-300 hover:text-white transition duration-300">
-            <button className="bg-button-pink px-4 py-2 rounded-md text-white">
-              เข้าสู่ระบบ
-            </button>
-          </li>
-        </ul>
-      </div>
-
-      {/* Right Buttons (Desktop) */}
-      <div className="hidden md:flex space-x-4">
-        <button className="text-gray-300 hover:text-white">ตะกร้า</button>
-        <button className="bg-button-pink px-4 py-2 rounded-md text-white">
-          เข้าสู่ระบบ
-        </button>
-      </div>
-    </nav>
+              Logout
+            </li>
+          </ul>
+        </div>
+      )}
+    </div>
   );
 };
 
