@@ -1,6 +1,18 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function Hero() {
+  // State to track logged-in user
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  useEffect(() => {
+    // Retrieve logged-in user data from localStorage
+    const savedUser = localStorage.getItem("loggedInUser");
+    if (savedUser) {
+      setLoggedInUser(JSON.parse(savedUser)); // Parse the user data and update the state
+    }
+  }, []); // Runs only once after the component is mounted
+
   return (
     <div className="relative flex flex-col items-center text-white px-4 sm:px-6 md:px-8">
       {/* Gradient Background */}
@@ -20,10 +32,14 @@ function Hero() {
 
         {/* Button Section */}
         <div className="flex justify-center gap-6">
-          {/* Sign Up Button */}
-          <button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full text-lg sm:text-xl font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-lg">
-            สมัครสมาชิก
-          </button>
+          {/* Conditionally render the "สมัครสมาชิก" button if user is not logged in */}
+          {!loggedInUser && (
+            <Link to="/signup">
+              <button className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-full text-lg sm:text-xl font-semibold transform transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-lg">
+                สมัครสมาชิก
+              </button>
+            </Link>
+          )}
 
           {/* View Demo Button */}
           <button className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full text-lg sm:text-xl font-semibold transform transition-all duration-300 hover:bg-white hover:text-black hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-lg">

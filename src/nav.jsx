@@ -17,7 +17,9 @@ const Nav = () => {
     setLoggedInUser(null);
     setIsMenuOpen(false); // Close mobile menu on logout
     localStorage.removeItem("loggedInUser");
+    window.location.reload(); // Refresh the page after logout
   };
+  
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen); // Toggle mobile menu
 
