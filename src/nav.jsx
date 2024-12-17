@@ -19,13 +19,12 @@ const Nav = () => {
     localStorage.removeItem("loggedInUser");
     window.location.reload(); // Refresh the page after logout
   };
-  
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen); // Toggle mobile menu
 
   return (
     <nav className="bg-black text-white px-6 py-4 flex justify-between items-center relative">
-      {/* Mobile Menu Button (on left) */}
+      {/* Mobile Menu Button */}
       <button className="md:hidden text-white" onClick={toggleMenu}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -52,7 +51,7 @@ const Nav = () => {
         </svg>
       </button>
 
-      {/* Logo (Left-aligned) */}
+      {/* Logo */}
       <div className="flex items-center">
         <h1 className="text-xl font-semibold">RentEase</h1>
       </div>
@@ -60,9 +59,8 @@ const Nav = () => {
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center space-x-6">
         <ul className="flex space-x-6">
-          {/* Link to Home */}
           <li className="text-gray-300 hover:text-white transition duration-300">
-            <Link to="/">Home</Link> {/* This will navigate to HomePage */}
+            <Link to="/">Home</Link>
           </li>
           <li className="text-gray-300 hover:text-white transition duration-300">
             <Link to="/product">Product</Link>
@@ -89,7 +87,7 @@ const Nav = () => {
         <div className="md:hidden absolute top-16 left-0 bg-black text-white w-full py-4 px-6 space-y-4 z-10">
           <ul>
             <li className="text-gray-300 hover:text-white transition duration-300">
-              <Link to="/" onClick={toggleMenu}>Home</Link> {/* This will navigate to HomePage */}
+              <Link to="/" onClick={toggleMenu}>Home</Link>
             </li>
             <li className="text-gray-300 hover:text-white transition duration-300">
               <Link to="/product" onClick={toggleMenu}>Product</Link>
@@ -108,7 +106,7 @@ const Nav = () => {
               <>
                 <li>
                   <Link
-                    to="/profile" // Add a link for profile management in mobile
+                    to="/manage-profile"
                     className="text-gray-300 hover:text-white transition duration-300"
                     onClick={toggleMenu}
                   >
@@ -153,7 +151,7 @@ const DropdownMenu = ({ loggedInUser, handleLogout }) => {
     <div className="relative" ref={dropdownRef}>
       <button
         className="flex items-center space-x-2 text-gray-300 hover:text-white transition duration-300"
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)} // Toggle dropdown
+        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
       >
         <span>{loggedInUser.user_name || "User"}</span>
         <svg
@@ -167,21 +165,24 @@ const DropdownMenu = ({ loggedInUser, handleLogout }) => {
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
       {isDropdownOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-20">
           <ul className="py-2 text-gray-300">
-            <li
-              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
-              onClick={() => alert("Profile management not implemented yet.")} // Placeholder for profile management
-            >
-              Manage Profile
+            <li>
+              <Link
+                to="/manage-profile"
+                className="block px-4 py-2 hover:bg-gray-700"
+              >
+                Manage Profile
+              </Link>
             </li>
-            <li
-              className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
-              onClick={handleLogout}
-            >
-              Logout
+            <li>
+              <button
+                className="w-full text-left px-4 py-2 hover:bg-gray-700"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
             </li>
           </ul>
         </div>

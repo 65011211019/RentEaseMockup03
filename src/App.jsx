@@ -5,11 +5,12 @@ import Login from "./login"; // Import Login component
 import SignUp from "./SignUp"; // Import SignUp component
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./HomePage"; // Import HomePage component
+import ManageProfile from "./ManageProfile"; // Import ManageProfile component
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
 
-  // Check if the user is logged in (can be improved by checking more securely)
+  // Check if the user is logged in
   useEffect(() => {
     const savedUser = localStorage.getItem("loggedInUser");
     if (savedUser) {
@@ -19,29 +20,30 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-dark-bg flex flex-col relative">
+      {/* App Container */}
+      <div className="flex flex-col min-h-screen bg-dark-bg relative">
         {/* Gradient Background */}
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-pink-to-black-start to-pink-to-black-end rounded-b-[20rem] z-[-1]"></div>
 
         {/* Header (Nav) */}
         <Nav loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />
 
-        {/* Main Content Wrapper */}
-        <Routes>
-          {/* Route for login */}
-          <Route path="/login" element={<Login setLoggedInUser={setLoggedInUser} />} />
+        {/* Main Content (Body) */}
+        <main className="flex-grow">
+          <Routes>
+            {/* Route for login */}
+            <Route path="/login" element={<Login setLoggedInUser={setLoggedInUser} />} />
 
-          {/* Route for sign-up */}
-          <Route path="/signup" element={<SignUp />} /> {/* Add this route */}
+            {/* Route for sign-up */}
+            <Route path="/signup" element={<SignUp />} />
 
-          {/* Default route for Home */}
-          <Route
-            path="/"
-            element={
-              <HomePage /> // Always show HomePage, regardless of login status
-            }
-          />
-        </Routes>
+            {/* Route for Manage Profile */}
+            <Route path="/manage-profile" element={<ManageProfile />} />
+
+            {/* Default route for Home */}
+            <Route path="/" element={<HomePage />} />
+          </Routes>
+        </main>
 
         {/* Footer Section */}
         <Footer />
