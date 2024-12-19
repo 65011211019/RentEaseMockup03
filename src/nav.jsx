@@ -153,7 +153,16 @@ const DropdownMenu = ({ loggedInUser, handleLogout }) => {
         className="flex items-center space-x-2 text-gray-300 hover:text-white transition duration-300"
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
       >
-        <span>{loggedInUser.user_name || "User"}</span>
+        {/* Show user profile image or fallback text */}
+        {loggedInUser.user_imgurl ? (
+          <img
+            src={loggedInUser.user_imgurl}
+            alt="User Profile"
+            className="w-8 h-8 rounded-full"
+          />
+        ) : (
+          <span>User</span>
+        )}
         <svg
           className="w-4 h-4 transform rotate-0"
           xmlns="http://www.w3.org/2000/svg"
@@ -190,5 +199,6 @@ const DropdownMenu = ({ loggedInUser, handleLogout }) => {
     </div>
   );
 };
+
 
 export default Nav;

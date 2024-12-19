@@ -33,7 +33,7 @@ const SignUp = () => {
         user_name: username,  // Username instead of full name
         user_email: email,
         user_pass: password,
-        user_imgurl: "https://example.com/default.jpg", // Default user image URL (can be updated)
+        user_imgurl: "https://i.ibb.co/NCzHn39/user.png", // Default user image URL (can be updated)
         user_birthday: birthday,
         user_numberphone: phoneNumber,
         user_verified: 1, // Assuming user is verified by default
