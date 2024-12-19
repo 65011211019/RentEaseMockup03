@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";  // Add this import for Link
 
 const Nav = () => {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -9,9 +9,24 @@ const Nav = () => {
   useEffect(() => {
     const savedUser = localStorage.getItem("loggedInUser");
     if (savedUser) {
-      setLoggedInUser(JSON.parse(savedUser));
+      const user = JSON.parse(savedUser);
+      fetchUserData(user.user_id);  // Fetch and update user data
     }
   }, []);
+
+  const fetchUserData = async (userId) => {
+    try {
+      const response = await fetch(`https://rent-ease-api-beta.vercel.app/api/user/${userId}`);
+      const data = await response.json();
+      if (data) {
+        // Update localStorage with the fetched user data
+        localStorage.setItem("loggedInUser", JSON.stringify(data));
+        setLoggedInUser(data);  // Update state with new user data
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   const handleLogout = () => {
     setLoggedInUser(null);
@@ -199,6 +214,5 @@ const DropdownMenu = ({ loggedInUser, handleLogout }) => {
     </div>
   );
 };
-
 
 export default Nav;
