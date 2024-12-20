@@ -6,6 +6,10 @@ import SignUp from "./SignUp"; // Import SignUp component
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import HomePage from "./HomePage"; // Import HomePage component
 import ManageProfile from "./ManageProfile"; // Import ManageProfile component
+import AllProducts from "./AllProducts"; // AllProducts Page Component
+import ProductDetail from "./ProductDetail";
+
+
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
@@ -39,6 +43,10 @@ function App() {
 
             {/* Route for Manage Profile */}
             <Route path="/manage-profile" element={<ManageProfile />} />
+
+            <Route path="/product" element={<AllProducts />} /> {/* All Products Page */}
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/all-products" element={<AllProducts />} /> {/* All Products Page */}
 
             {/* Default route for Home */}
             <Route path="/" element={<HomePage />} />

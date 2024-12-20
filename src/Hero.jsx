@@ -42,9 +42,11 @@ function Hero() {
           )}
 
           {/* View Demo Button */}
-          <button className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full text-lg sm:text-xl font-semibold transform transition-all duration-300 hover:bg-white hover:text-black hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-lg">
-            ดูสินค้าทั้งหมด
-          </button>
+          <Link to="/all-products">
+            <button className="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full text-lg sm:text-xl font-semibold transform transition-all duration-300 hover:bg-white hover:text-black hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-lg">
+              ดูสินค้าทั้งหมด
+            </button>
+          </Link>
         </div>
       </section>
     </div>
