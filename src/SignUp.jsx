@@ -1,137 +1,270 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, User, Mail, Phone, Calendar } from "lucide-react";
+
+// InputField Component
+const InputField = ({ icon: Icon, type, name, placeholder, autoComplete, className, onChange, value }) => {
+  return (
+    <div className="relative">
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+        <Icon size={18} />
+      </div>
+      <input
+        type={type}
+        name={name}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        className={`w-full bg-gray-800 text-white rounded-lg px-10 py-3 
+        border border-gray-700 focus:border-blue-500 focus:ring-2 
+        focus:ring-blue-500 focus:ring-opacity-20 transition-all
+        placeholder:text-gray-500 ${className || ''}`}
+        onChange={onChange}
+        value={value}
+      />
+    </div>
+  );
+};
 
 const SignUp = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [username, setUsername] = useState(""); // State for user's username
-  const [birthday, setBirthday] = useState(""); // State for user's birthday
-  const [phoneNumber, setPhoneNumber] = useState(""); // State for user's phone number
-  const [error, setError] = useState(""); // State for error messages
-  const [loading, setLoading] = useState(false); // Loading state
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirmPassword: "",
+    username: "",
+    birthday: "",
+    phoneNumber: ""
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const validateForm = () => {
+    if (!formData.username || !formData.email || !formData.password || 
+        !formData.confirmPassword || !formData.birthday || !formData.phoneNumber) {
+      setError("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      return false;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("รหัสผ่านไม่ตรงกัน");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError("รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง");
+      return false;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setError("เบอร์โทรศัพท์ต้องเป็นตัวเลข 10 หลัก");
+      return false;
+    }
+
+    return true;
+  };
 
   const handleSignUp = async () => {
-    // Validation checks
-    if (!email || !password || !confirmPassword || !username || !birthday || !phoneNumber) {
-      setError("Please fill in all fields.");
+    if (!validateForm()) {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
-    setError(""); // Clear previous errors
-    setLoading(true); // Start loading
+    setError("");
+    setLoading(true);
 
     try {
-      // Create user object to send to the API
+      // ตรวจสอบว่ามีอีเมลซ้ำหรือไม่
+      const checkEmailResponse = await fetch(
+        "https://rent-ease-api-beta.vercel.app/api/users"
+      );
+      const existingUsers = await checkEmailResponse.json();
+      const emailExists = existingUsers.some(
+        (user) => user.user_email === formData.email
+      );
+
+      if (emailExists) {
+        setError("อีเมลนี้ถูกใช้งานแล้ว");
+        setLoading(false);
+        return;
+      }
+
       const user = {
-        user_name: username,  // Username instead of full name
-        user_email: email,
-        user_pass: password,
-        user_imgurl: "https://i.ibb.co/NCzHn39/user.png", // Default user image URL (can be updated)
-        user_birthday: birthday,
-        user_numberphone: phoneNumber,
-        user_verified: 1, // Assuming user is verified by default
+        user_name: formData.username,
+        user_email: formData.email,
+        user_pass: formData.password,
+        user_imgurl: "https://i.ibb.co/NCzHn39/user.png",
+        user_birthday: formData.birthday,
+        user_numberphone: formData.phoneNumber,
+        user_verified: 1,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
       const response = await fetch("https://rent-ease-api-beta.vercel.app/api/user", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
       });
 
       if (!response.ok) {
-        const errorDetails = await response.text();
-        console.error("Error details:", errorDetails);
-        throw new Error(`Failed to create user: ${response.statusText}`);
+        throw new Error(`การสมัครสมาชิกล้มเหลว: ${response.statusText}`);
       }
 
       const newUser = await response.json();
-
-      // After successful sign-up, navigate to login or home page
-      alert(`Account created successfully! Welcome, ${newUser.user_name}!`);
-      navigate("/login"); // Redirect to login page
+      alert(`สร้างบัญชีสำเร็จ! ยินดีต้อนรับ ${newUser.user_name}!`);
+      navigate("/login");
 
     } catch (err) {
       console.error("Sign-up Failed:", err.message);
-      setError(`An error occurred: ${err.message}. Please try again later.`);
+      setError(`เกิดข้อผิดพลาด: ${err.message}`);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4 p-4 bg-gray-800 rounded-md w-full max-w-sm mx-auto">
-      <h2 className="text-2xl font-semibold text-white mb-4">Sign Up</h2>
-      <div className="space-y-2 w-full">
-        <input
-          type="text"
-          placeholder="Username"
-          aria-label="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          aria-label="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          aria-label="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
-        <input
-          type="password"
-          placeholder="Confirm Password"
-          aria-label="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
-        <input
-          type="date"
-          placeholder="Birthday"
-          aria-label="Birthday"
-          value={birthday}
-          onChange={(e) => setBirthday(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Phone Number"
-          aria-label="Phone Number"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          className="bg-gray-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500 w-full"
-        />
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8 bg-gray-800 p-8 rounded-2xl shadow-xl">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white mb-2">สร้างบัญชีใหม่</h2>
+          <p className="text-gray-400">กรอกข้อมูลด้านล่างเพื่อเริ่มต้นใช้งาน</p>
+        </div>
+
+        <div className="space-y-4">
+          <InputField
+            icon={User}
+            type="text"
+            name="username"
+            placeholder="ชื่อผู้ใช้"
+            autoComplete="username"
+            onChange={handleChange}
+            value={formData.username}
+          />
+
+          <InputField
+            icon={Mail}
+            type="email"
+            name="email"
+            placeholder="อีเมล"
+            autoComplete="email"
+            onChange={handleChange}
+            value={formData.email}
+          />
+
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <User size={18} />
+            </div>
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="รหัสผ่าน"
+              className="w-full bg-gray-800 text-white rounded-lg px-10 py-3 
+              border border-gray-700 focus:border-blue-500 focus:ring-2 
+              focus:ring-blue-500 focus:ring-opacity-20 transition-all
+              placeholder:text-gray-500"
+              onChange={handleChange}
+              value={formData.password}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+              <User size={18} />
+            </div>
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              placeholder="ยืนยันรหัสผ่าน"
+              className="w-full bg-gray-800 text-white rounded-lg px-10 py-3 
+              border border-gray-700 focus:border-blue-500 focus:ring-2 
+              focus:ring-blue-500 focus:ring-opacity-20 transition-all
+              placeholder:text-gray-500"
+              onChange={handleChange}
+              value={formData.confirmPassword}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          <InputField
+            icon={Calendar}
+            type="date"
+            name="birthday"
+            className="text-gray-400"
+            onChange={handleChange}
+            value={formData.birthday}
+          />
+
+          <InputField
+            icon={Phone}
+            type="tel"
+            name="phoneNumber"
+            placeholder="เบอร์โทรศัพท์"
+            autoComplete="tel"
+            onChange={handleChange}
+            value={formData.phoneNumber}
+          />
+        </div>
+
+        <button
+          onClick={handleSignUp}
+          disabled={loading}
+          className="w-full bg-gradient-to-r from-blue-500 to-blue-600 
+          hover:from-blue-600 hover:to-blue-700 text-white font-semibold 
+          rounded-lg py-3 transition-all transform hover:scale-[1.02] 
+          active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" />
+              <span>กำลังดำเนินการ...</span>
+            </div>
+          ) : (
+            "สมัครสมาชิก"
+          )}
+        </button>
+
+        {error && (
+          <div className="text-red-500 text-center bg-red-100/10 p-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        <p className="text-center text-gray-400">
+          มีบัญชีอยู่แล้ว?{" "}
+          <button
+            onClick={() => navigate("/login")}
+            className="text-blue-500 hover:text-blue-400 font-medium"
+          >
+            เข้าสู่ระบบ
+          </button>
+        </p>
       </div>
-
-      <button
-        onClick={handleSignUp}
-        className="bg-pink-500 px-4 py-2 rounded-md text-white hover:bg-pink-600 transition duration-300 mt-4 w-full"
-        disabled={loading} // Disable button while loading
-      >
-        {loading ? "Signing up..." : "Sign Up"} {/* Display loading state */}
-      </button>
-
-      {error && <p className="text-red-500 mt-2">{error}</p>}
     </div>
   );
 };

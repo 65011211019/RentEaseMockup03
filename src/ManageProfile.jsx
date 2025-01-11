@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import imageCompression from 'browser-image-compression'; // Import ไลบรารี
+import imageCompression from 'browser-image-compression';
+import { User, Mail, Phone, Calendar, Camera, Loader2, Save, X } from "lucide-react";
 
 function ManageProfile() {
   const [userData, setUserData] = useState(null);
@@ -10,7 +11,7 @@ function ManageProfile() {
   const [userId, setUserId] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [oldImageId, setOldImageId] = useState("");
-  const [isUploading, setIsUploading] = useState(false); // State for uploading status
+  const [isUploading, setIsUploading] = useState(false);
   const imgbbAPIKey = "1c0006ef8fc002b4e7177e2181f7d4fc";
 
   useEffect(() => {
@@ -46,53 +47,42 @@ function ManageProfile() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle file change, compress the image, then upload
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const options = {
-      maxSizeMB: 1, // ควบคุมขนาดไฟล์ไม่ให้เกิน 1MB
-      maxWidthOrHeight: 800, // กำหนดขนาดสูงสุดที่ความกว้างหรือความสูง
+      maxSizeMB: 1,
+      maxWidthOrHeight: 800,
       useWebWorker: true
     };
 
-    setIsUploading(true); // Start uploading
+    setIsUploading(true);
 
     try {
-      // Compress image
       const compressedFile = await imageCompression(file, options);
-
       const formData = new FormData();
       formData.append("image", compressedFile);
 
-      // Delete old image before uploading the new one
       if (oldImageId) {
         await axios.delete(`https://api.imgbb.com/1/delete/${oldImageId}?key=${imgbbAPIKey}`);
-        console.log("Old image deleted successfully");
       }
 
-      // Upload compressed image
       const response = await axios.post(
         `https://api.imgbb.com/1/upload?key=${imgbbAPIKey}`,
         formData
       );
       setUploadedImageUrl(response.data.data.url);
       setOldImageId(response.data.data.id);
-      alert("Image uploaded successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Failed to upload image.");
     } finally {
-      setIsUploading(false); // End uploading
+      setIsUploading(false);
     }
   };
 
   const handleUpdate = async () => {
-    if (isUploading) {
-      alert("Please wait for the image to upload before saving!");
-      return;
-    }
+    if (isUploading) return;
 
     try {
       setLoading(true);
@@ -101,157 +91,173 @@ function ManageProfile() {
         user_imgurl: uploadedImageUrl || userData.user_imgurl,
         user_img_id: uploadedImageUrl ? oldImageId : userData.user_img_id,
       };
-      console.log("Update Data:", updateData);
+      
       await axios.put(
         `https://rent-ease-api-beta.vercel.app/api/user/${userId}`,
         updateData
       );
-      setUserData(updateData);
-      setIsEditing(false);
-      alert("Profile updated successfully!");
-
+      
       const savedUser = JSON.parse(localStorage.getItem("loggedInUser"));
       const updatedUser = { ...savedUser, ...updateData };
       localStorage.setItem("loggedInUser", JSON.stringify(updatedUser));
-
+      
       window.location.reload();
     } catch (error) {
       console.error("Error updating user data:", error);
-      alert("Failed to update profile.");
-    } finally {
-      setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="text-center text-gray-500 mt-10">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+      </div>
+    );
   }
 
   if (!userData) {
-    return <div className="text-center text-red-500 mt-10">User data not found!</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-red-500 font-medium">User data not found!</div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 mt-10 bg-gray-50 rounded-lg shadow-lg px-4 md:px-8">
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Manage Profile
-      </h1>
-      <div className="flex justify-center items-center mb-6">
-        <img
-          src={userData.user_imgurl || "https://via.placeholder.com/150"}
-          alt="Profile"
-          className="w-32 h-32 object-cover rounded-full"
-        />
-      </div>
-      {!isEditing ? (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center border-b pb-2">
-            <p className="text-lg">
-              <strong>Name:</strong> {userData.user_name}
-            </p>
+    <div className="min-h-screen bg-gray-900 py-12 px-4">
+      <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-purple-900 to-indigo-900 px-6 py-8">
+          <div className="flex flex-col items-center">
+            <div className="relative">
+              <img
+                src={uploadedImageUrl || userData.user_imgurl || "https://via.placeholder.com/150"}
+                alt="Profile"
+                className="w-24 h-24 rounded-full border-4 border-white object-cover"
+              />
+              {isEditing && (
+                <label className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-lg cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Camera className="w-5 h-5 text-gray-600" />
+                </label>
+              )}
+            </div>
+            <h1 className="mt-4 text-2xl font-bold text-white">
+              {userData.user_name}
+            </h1>
+            <p className="text-purple-200">{userData.user_email}</p>
           </div>
-          <div className="flex justify-between items-center border-b pb-2">
-            <p className="text-lg">
-              <strong>Email:</strong> {userData.user_email}
-            </p>
-          </div>
-          <div className="flex justify-between items-center border-b pb-2">
-            <p className="text-lg">
-              <strong>Phone:</strong> {userData.user_numberphone}
-            </p>
-          </div>
-          <div className="flex justify-between items-center border-b pb-2">
-            <p className="text-lg">
-              <strong>Birthday:</strong> {new Date(userData.user_birthday).toLocaleDateString()}
-            </p>
-          </div>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300"
-          >
-            Edit Profile
-          </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="mb-2">
-            <label className="block font-semibold mb-1">Name:</label>
-            <input
-              type="text"
-              name="user_name"
-              value={formData.user_name}
-              onChange={handleInputChange}
-              className="border p-2 rounded w-full focus:ring focus:ring-blue-300"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-semibold mb-1">Email:</label>
-            <input
-              type="email"
-              name="user_email"
-              value={formData.user_email}
-              onChange={handleInputChange}
-              className="border p-2 rounded w-full focus:ring focus:ring-blue-300"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-semibold mb-1">Phone:</label>
-            <input
-              type="text"
-              name="user_numberphone"
-              value={formData.user_numberphone}
-              onChange={handleInputChange}
-              className="border p-2 rounded w-full focus:ring focus:ring-blue-300"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-semibold mb-1">Birthday:</label>
-            <input
-              type="date"
-              name="user_birthday"
-              value={formData.user_birthday.split("T")[0]}
-              onChange={handleInputChange}
-              className="border p-2 rounded w-full focus:ring focus:ring-blue-300"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-semibold mb-1">Profile Picture:</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="border p-2 rounded w-full focus:ring focus:ring-blue-300"
-            />
-            {uploadedImageUrl && (
-              <div className="mt-4">
-                <p>Uploaded Image:</p>
-                <img
-                  src={uploadedImageUrl}
-                  alt="Uploaded"
-                  className="w-32 h-32 object-cover rounded-full"
-                />
+
+        <div className="px-6 py-8">
+          {!isEditing ? (
+            <div className="space-y-6">
+              <InfoField icon={User} label="Name" value={userData.user_name} />
+              <InfoField icon={Mail} label="Email" value={userData.user_email} />
+              <InfoField icon={Phone} label="Phone" value={userData.user_numberphone} />
+              <InfoField
+                icon={Calendar}
+                label="Birthday"
+                value={new Date(userData.user_birthday).toLocaleDateString()}
+              />
+
+              <button
+                onClick={() => setIsEditing(true)}
+                className="w-full mt-6 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200 font-medium"
+              >
+                Edit Profile
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <FormField
+                icon={User}
+                label="Name"
+                name="user_name"
+                value={formData.user_name}
+                onChange={handleInputChange}
+              />
+              <FormField
+                icon={Mail}
+                label="Email"
+                name="user_email"
+                type="email"
+                value={formData.user_email}
+                onChange={handleInputChange}
+              />
+              <FormField
+                icon={Phone}
+                label="Phone"
+                name="user_numberphone"
+                value={formData.user_numberphone}
+                onChange={handleInputChange}
+              />
+              <FormField
+                icon={Calendar}
+                label="Birthday"
+                name="user_birthday"
+                type="date"
+                value={formData.user_birthday.split("T")[0]}
+                onChange={handleInputChange}
+              />
+
+              <div className="flex space-x-4 mt-8">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-200 font-medium flex items-center justify-center space-x-2"
+                >
+                  <X className="w-5 h-5" />
+                  <span>Cancel</span>
+                </button>
+                <button
+                  onClick={handleUpdate}
+                  disabled={isUploading}
+                  className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-200 font-medium flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Save className="w-5 h-5" />
+                  )}
+                  <span>Save Changes</span>
+                </button>
               </div>
-            )}
-          </div>
-          <div className="flex justify-end space-x-2">
-            <button
-              onClick={handleUpdate}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-300"
-              disabled={isUploading} // Disable save if uploading
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-300"
-            >
-              Cancel
-            </button>
-          </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
+
+const InfoField = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+    <Icon className="w-5 h-5 text-gray-500" />
+    <div>
+      <p className="text-sm font-medium text-gray-500">{label}</p>
+      <p className="text-gray-900">{value}</p>
+    </div>
+  </div>
+);
+
+const FormField = ({ icon: Icon, label, name, type = "text", value, onChange }) => (
+  <div className="space-y-2">
+    <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
+      <Icon className="w-5 h-5" />
+      <span>{label}</span>
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-200"
+    />
+  </div>
+);
 
 export default ManageProfile;
